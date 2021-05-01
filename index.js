@@ -1,5 +1,10 @@
 const fs = require('fs');
-const { Trie, TrieNode } = require('@datastructures-js/trie');
+const AWS = require('aws-sdk');
+
+const region = 'us-east-1';
+const {fileName, dbTable} = process.env;
+const dynamoDbClient = createDynamoDbClient(region);
+const { Trie } = require('@datastructures-js/trie');
 const dictionary = new Trie();
 const dictArr = [];
 const keypad = {
@@ -11,41 +16,95 @@ const keypad = {
   7: ["p", "q", "r", "s"],
   8: ["t", "u", "v"], 
   9: ["w", "x", "y", "z"]
-}
+};
 
 
-exports.handler = async(event) => {
+exports.handler = async (event) => {
   let response;
-  const phoneNumber = "2236868";
+  // testnumber reference +13142226868
+  const receivedPhoneNumber = event["Details"]["Parameters"]["phoneNumber"];
+  const areaCode = receivedPhoneNumber.slice(2,5);
+  const phoneNumber = receivedPhoneNumber.slice(5);
+  console.log(phoneNumber);
   try {
-    const data = fs.readFileSync('10k.txt', 'UTF-8');
+    const data = fs.readFileSync(fileName, 'UTF-8');
     const lines = data.split(/\r?\n/);
     lines.forEach((line)=> {
       if ((line.length > 1) && (line.length < 8) ) {
           dictionary.insert(line);
           dictArr.push(line);
       }
-    })
-    let arr = pnToLetter(phoneNumber);
-    let words = getVanity(arr);
-    let scores = scoreSortWords(words);
-    console.log(scores);
-    response = {
-      statusCode: 200,
-      body: JSON.stringify(scores),
-    };
-    
+    });
+    let pnInLetters = pnToLetter(phoneNumber);
+    let vanityWords = getVanity(pnInLetters);
+    let scoredSortedWords = scoreSortWords(vanityWords, areaCode);
+    await insertToDB(scoredSortedWords, receivedPhoneNumber);
+    console.log(scoredSortedWords);
+    response = formatConnectResponse(scoredSortedWords);    
   } catch (err) {
     console.log(err);
-    response = {
-      statusCode: 404, 
-      body: JSON.stringify(err)
-    }
-    
+    response = formatConnectResponse(null, err);
   } finally {
+    console.log(response);
     return response;
   }
+};
 
+
+function createDynamoDbClient(regionName) {
+  AWS.config.update({region: regionName});
+  return new AWS.DynamoDB();
+}
+
+function formatConnectResponse(sortedWords, err = "") {
+  let result = "";
+  if (sortedWords === null) {
+    return {vanityWords: err};
+  }
+  let resultSize = Object.keys(sortedWords).length;
+  if (resultSize > 3) {
+    resultSize = 3;
+  }
+  for (let i = 0; i < resultSize; i++) {
+    console.log(Object.keys(sortedWords)[i]);
+    if (i === 0) {
+      result = "<prosody rate='x-slow'>" + 
+        "<say-as interpret-as='characters'>" + 
+        sortedWords[Object.keys(sortedWords)[i]] + 
+        "</say-as>" + "</prosody>";
+    } else {
+      result = result + ".<break strength='x-strong'/> and. <break strength='x-strong'/>" + 
+        "<prosody rate='x-slow'>" +"<say-as interpret-as='characters'>" + 
+         sortedWords[Object.keys(sortedWords)[i]] + 
+        "</say-as>" + "</prosody>";
+    }
+    // result = result + " " + sortedWords[Object.keys(sortedWords)[i]];
+  }
+  return { vanityWords: result.trim()} ;
+}
+
+async function insertToDB(words, phoneNumber) {
+    for (let score of Object.keys(words)) {
+      const currentTime = new Date().toISOString();
+      let params = {
+          Item: {
+           "pk": {
+             S: words[score]
+            }, 
+           "sk": {
+             S: currentTime
+            }, 
+           "attr1": {
+             S: phoneNumber
+            },
+           "attr2": {
+             S: score
+            }
+          },
+        TableName: dbTable
+      };
+      await dynamoDbClient.putItem(params).promise();
+    }
 }
 
 function pnToLetter (phoneNumber)  {
@@ -70,7 +129,6 @@ function getVanity (arr) {
     if (index === arr.length) {
       const words = wordBreak(str);
       if (words.length !== 0) {
-        // console.log(words);
         vanityWords = vanityWords.concat(words);
       }
       return;
@@ -78,20 +136,18 @@ function getVanity (arr) {
     arr[index].forEach((element) => {
       getVanityWords(index + 1, str + element);
     });
-  };
+  }
   getVanityWords();
   if (vanityWords.length === 0) {
-    throw "no vanity numbers found"
+    throw "no vanity numbers found";
   }
   return vanityWords;
 }
 
-
 function wordBreak(str) {
-  let wordBreakArr = []
+  let wordBreakArr = [];
   function getWords (str, result = '') {
     if (str === "") {
-        // console.log(result.trim());
         wordBreakArr.push(result.trim());
         return;
     }
@@ -104,18 +160,18 @@ function wordBreak(str) {
   }
   getWords(str);
   return wordBreakArr;
-};
+}
 
-function scoreSortWords (wordsArr) {
+function scoreSortWords (wordsArr, areaCode) {
   let result = {};
   let resultSorted = {};
   let resultSize = 0;
   wordsArr.forEach((vanityWord) => {
     const words = vanityWord.split(" ");
-    let score = 0
+    let score = 0;
     words.forEach((word) => {
-      score = score + dictArr.indexOf(word)
-    })
+      score = score + dictArr.indexOf(word);
+    });
     result[score] = vanityWord;
   });
   result = Object.fromEntries(Object.entries(result).sort()); 
@@ -125,8 +181,7 @@ function scoreSortWords (wordsArr) {
     resultSize = 5;
   }
   for (let i = 0; i < resultSize; i++) {
-    resultSorted[Object.keys(result)[i]] = result[Object.keys(result)[i]]
+    resultSorted[Object.keys(result)[i]] = areaCode + "" + result[Object.keys(result)[i]];
   }
   return resultSorted; 
-
 }
