@@ -1,15 +1,17 @@
-## Reasons for implementation
+## Reasons for Implementation
 The approach I took when implementing the vanity.js function was to make it as modular as possible, as that would help me break down problems in consumable chunks and meet the application BMRs as quickly as possible. I created 8 different helper functions that are also useful when debugging code, separate concerns and provide isolation.
 
 Creating the different helper functions also helps in writing useful unit tests.
 
 One particular challenge I faced when creating this function was how to make the kepad word combinations (several thousands per valid phone number) look up to the English word dictionary (about 10K words) efficient, a naive approach got me O(n^2) which was too slow given the volume of data, making the application slow and ineficient. From research, I found that a Trie data structure is ideal for the dictionary word lookup, and implementing this reduced the lookup time to O(1). I also leveraged an external NPM library to make a Trie with the dictionary words (txt file).
 
-Another interesting decision I had to make was the DynamoDB table deisgn. I designed it in a way that it would satisfy my two main access patterns, i.e. writing records from the vanity.js function and reading the last vanity number records sorted by date (descending). To accomplish this I used the main database schema (defined in vanitynumbers.json) with the following key value matching: pk: vanityWord, sk: dateTime, attr1: phoneNumber, attr2: score, attr3: "vanitynumber". The way the GSI was designed helped me query vanity words in order without much extra querying effort.
+Another interesting decision I had to make was the DynamoDB table design. I designed it in a way that it would satisfy my two main access patterns, i.e. writing records from the vanity.js function and reading the last vanity number records sorted by date (descending). To accomplish this I used the main database schema (defined in vanitynumbers.json) with the following key value matching: pk: vanityWord, sk: dateTime, attr1: phoneNumber, attr2: score, attr3: "vanitynumber". The way the GSI was designed helped me query vanity words in order without much extra querying effort.
 
-To make the queryVanityTable.js I leverage No SQL workbench and extra code to format responses back to the front end, this was the most efficient way to ensure my queries worked right away. I combined this function with an API gateway to have this endpoint available to the front end application.
+In addition, I made some changes to the vanity.js return values to Amazon Connect since the service was not reading the values properly, I had to format the responses to Amazon connect as SSML to have connect interpret the vanity numbers in a way that the user could understand (slowed speech speed and added tags for pauses and to spell out vanity numbers).
 
-To create the front end application, I leveraged AWS amplify which creates the CI/CD pipeline to bring local web app code and deploy it in the cloud in a matter of minutes, this helped me create a simple lookup function and visualization quickly.
+Also, to make the queryVanityTable.js, I leverage No SQL workbench and extra code to format responses back to the front end, this was the most efficient way to ensure my queries worked right away. I combined this function with an API gateway to have this endpoint available to the front end application.
+
+Moreover, to create the front end application, I leveraged AWS amplify which creates the CI/CD pipeline to bring local web app code and deploy it in the cloud in a matter of minutes, this helped me create a simple lookup function and visualization quickly.
 
 ## Shortcuts
 vanity.js: In the Vanity Word Scoring mechanism, once I got the result of keypad to dictionary words match up I used O(n) to get each word scored to provide sorting. In this case, the latency was not as visible since only a few words are returned from the match up, and then compared with the 10K word dictionary to get the word index. The lowest the index found in the dictionary array, the most common the word was.
