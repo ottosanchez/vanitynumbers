@@ -1,4 +1,4 @@
-## Reasons for implementation##
+## Reasons for implementation
 The approach I took when implementing the vanity.js function was to make it as modular as possible, as that would help me break down problems in consumable chunks and meet the application BMRs as quickly as possible. I created 8 different helper functions that are also useful when debugging code, separate concerns and provide isolation.
 
 Creating the different helper functions also helps in writing useful unit tests.
@@ -11,7 +11,7 @@ To make the queryVanityTable.js I leverage No SQL workbench and extra code to fo
 
 To create the front end application, I leveraged AWS amplify which creates the CI/CD pipeline to bring local web app code and deploy it in the cloud in a matter of minutes, this helped me create a simple lookup function and visualization quickly.
 
-## Shortcuts##
+## Shortcuts
 vanity.js: In the Vanity Word Scoring mechanism, once I got the result of keypad to dictionary words match up I used O(n) to get each word scored to provide sorting. In this case, the latency was not as visible since only a few words are returned from the match up, and then compared with the 10K word dictionary to get the word index. The lowest the index found, the most common the word was.
 
 In production, I would have created a more effiecient score lookup mechanism that that would have gotten me O(1) or O(logN).
@@ -20,6 +20,6 @@ In addition, I imported a the Trie data structure, in production I would have cr
 
 I also would have took more care about the efficiency of my helper functions, there's work to do make them more consice and efficient. In terms of error handling I implemented the basics, however, I acknowledge that in a production application error handling must be more robust.
 
-## TO-DOs##
+## TO-DOs
 With more time I would have created a deployment package, mainly using AWS SAM or CDK. I would have also integrated codepipeline, code build and code deploy to the process to deploy changes to the application only if unit test and integration tests are successful.
 I would have created unit testing. I think this could be accomplish in a short timeframe since the code is modular allowing to create tests more easily.
