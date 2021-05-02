@@ -1,5 +1,5 @@
 ## Vanitynumbers App Description##
-    This application provides vanity number options for your phone number, you need to dial a phone number (available to application users upon request) to get them. If numbers are found, up to 3 will be spelled out to you, sorted from most to the least common by an automated menu and available in a webpage for your reference (https://master.d1w8okf54d17xb.amplifyapp.com/). Only the last 5 users (identified by phone number) will be shown in the webpage with the 5 most common vanity options. 
+This application provides vanity number options for your phone number, you need to dial a phone number (available to application users upon request) to get them. If numbers are found, up to 3 will be spelled out to you, sorted from most to the least common by an automated menu and available in a webpage for your reference (https://master.d1w8okf54d17xb.amplifyapp.com/). Only the last 5 users (identified by phone number) will be shown in the webpage with the 5 most common vanity options. 
     
     The application takes the last 7 digits of your phone number, converts those digits to letters and matches up the different letter iterations to common English words between 3 and 7 characters long.
     
