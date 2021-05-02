@@ -1,13 +1,13 @@
 const fs = require('fs');
 const AWS = require('aws-sdk');
-
 const region = 'us-east-1';
-const {fileName, dbTable} = process.env;
+const {fileName, dbTable, minWordLength, maxWordLength} = process.env;
 const dynamoDbClient = createDynamoDbClient(region);
 const { Trie } = require('@datastructures-js/trie');
-const dictionary = new Trie();
-const dictArr = [];
-const keypad = {
+let dictionary = new Trie();
+let dictArr = [];
+let response;
+let keypad = {
   2: ["a", "b", "c"],
   3: ["d", "e", "f"],
   4: ["g", "h", "i"], 
@@ -18,23 +18,25 @@ const keypad = {
   9: ["w", "x", "y", "z"]
 };
 
+try {
+  let lines = readFile(fileName);
+      lines.forEach((line)=> {
+        if ((line.length > minWordLength - 1) && (line.length < maxWordLength + 1) ) {
+            dictionary.insert(line);
+            dictArr.push(line);
+        }
+  });
+} catch (err) {
+  response = formatConnectResponse(null, err);
+}
 
 exports.handler = async (event) => {
-  let response;
   // testnumber reference +13142226868
   const receivedPhoneNumber = event["Details"]["Parameters"]["phoneNumber"];
   const areaCode = receivedPhoneNumber.slice(2,5);
   const phoneNumber = receivedPhoneNumber.slice(5);
   console.log(phoneNumber);
   try {
-    const data = fs.readFileSync(fileName, 'UTF-8');
-    const lines = data.split(/\r?\n/);
-    lines.forEach((line)=> {
-      if ((line.length > 1) && (line.length < 8) ) {
-          dictionary.insert(line);
-          dictArr.push(line);
-      }
-    });
     let pnInLetters = pnToLetter(phoneNumber);
     let vanityWords = getVanity(pnInLetters);
     let scoredSortedWords = scoreSortWords(vanityWords, areaCode);
@@ -48,6 +50,11 @@ exports.handler = async (event) => {
   }
 };
 
+function readFile (fileName) {
+  let data = fs.readFileSync(fileName, 'UTF-8');
+  let lines = data.split(/\r?\n/);
+  return lines;
+}
 
 function createDynamoDbClient(regionName) {
   AWS.config.update({region: regionName});
@@ -64,6 +71,7 @@ function formatConnectResponse(sortedWords, err = "") {
     resultSize = 3;
   }
   for (let i = 0; i < resultSize; i++) {
+    // console.log(Object.keys(sortedWords)[i]);
     if (i === 0) {
       result = "<prosody rate='x-slow'>" + 
         "<say-as interpret-as='characters'>" + 
@@ -127,7 +135,7 @@ function getVanity (arr) {
   let vanityWords = [];
   function getVanityWords (index = 0, str = '') {
     if (index === arr.length) {
-      const words = wordBreak(str);
+      let words = wordBreak(str);
       if (words.length !== 0) {
         vanityWords = vanityWords.concat(words);
       }
@@ -151,8 +159,8 @@ function wordBreak(str) {
         wordBreakArr.push(result.trim());
         return;
     }
-    for (var i = 1; i < str.length + 1; i++) {
-      var substr = str.slice(0, i);
+    for (let i = 1; i < str.length + 1; i++) {
+      let substr = str.slice(0, i);
       if (dictionary.has(substr)) {
         getWords(str.slice(i), result + ' ' + substr);
       }
@@ -167,7 +175,7 @@ function scoreSortWords (wordsArr, areaCode) {
   let resultSorted = {};
   let resultSize = 0;
   wordsArr.forEach((vanityWord) => {
-    const words = vanityWord.split(" ");
+    let words = vanityWord.split(" ");
     let score = 0;
     words.forEach((word) => {
       score = score + dictArr.indexOf(word);
