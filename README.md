@@ -1,5 +1,5 @@
 ## Vanitynumbers App Description##
-This application provides vanity number options for your phone number, you need to dial a phone number (available to application users upon request) to get them. If numbers are found, up to 3 will be spelled out to you, sorted from most to the least common by an automated menu and available in a webpage for your reference (https://master.d1w8okf54d17xb.amplifyapp.com/). Only the last 5 users (identified by phone number) will be shown in the webpage with the 5 most common vanity options. 
+This application provides vanity number options for your phone number, you need to dial a phone number (available to application users upon request) to hear them. If numbers are found, up to 3 will be spelled out to you, sorted from most to the least common english words by an automated menu and also available in a webpage for your reference (https://master.d1w8okf54d17xb.amplifyapp.com/). Only the last 5 users (identified by phone number) will be shown in the webpage with up to 5 vanity options each. 
     
 The application takes the last 7 digits of your phone number, converts those digits to letters and matches up the different letter iterations to common English words between 3 and 7 characters long.
     
@@ -12,7 +12,7 @@ The phone service hosting voice conversations is Amazon Connect, integrated with
     
 Web App: 
     
-The web app CI/CD pipeline was built using AWS Amplify. The front end code (https://github.com/ottosanchez/vanityfrontend) calls a method in AWS API Gateway that is integrated to a Lambda function (queryVanityTable) that in turns reads vanity number lookups for the last 5 phone numbers that called in the Phone Vanity Number Lookup service. 
+The web app CI/CD pipeline was built using AWS Amplify. The front application (code can be found here https://github.com/ottosanchez/vanityfrontend) calls a method in AWS API Gateway that is integrated to a Lambda function (queryVanityTable) that in turns reads vanity number lookups for the last 5 phone numbers that called in the Phone Vanity Number Lookup service. 
   
 
 ## Implementation Details- Functions ##
