@@ -1,67 +1,67 @@
-const AWS = require('aws-sdk');
+const AWS = require("aws-sdk");
 
-const region = 'us-east-1';
-const {queryItemLimit, dbTable, indexName} = process.env;
+const region = "us-east-1";
+const { queryItemLimit, dbTable, indexName } = process.env;
 const dynamoDbClient = createDynamoDbClient(region);
 let queryInput = createQueryInput(queryItemLimit);
 
 function createDynamoDbClient(regionName) {
-  AWS.config.update({region: regionName});
+  AWS.config.update({ region: regionName });
   return new AWS.DynamoDB();
 }
 
 function createQueryInput(queryItemLimit) {
   return {
-    "TableName": dbTable,
-    "IndexName": indexName,
-    "ScanIndexForward": false,
-    "ConsistentRead": false,
-    "KeyConditionExpression": "#69240 = :69240",
-    "ExpressionAttributeValues": {
+    TableName: dbTable,
+    IndexName: indexName,
+    ScanIndexForward: false,
+    ConsistentRead: false,
+    KeyConditionExpression: "#69240 = :69240",
+    ExpressionAttributeValues: {
       ":69240": {
-        "S": "vanitynumber"
-      }
+        S: "vanitynumber",
+      },
     },
-    "ExpressionAttributeNames": {
-      "#69240": "attr3"
+    ExpressionAttributeNames: {
+      "#69240": "attr3",
     },
-    "Limit": queryItemLimit,
-  }
+    Limit: queryItemLimit,
+  };
 }
-exports.handler = async(event) => {
+exports.handler = async (event) => {
   let response;
   try {
     let queryOutput = await dynamoDbClient.query(queryInput).promise();
-    let responseBody = formatResponseBody((queryOutput.Items)); 
+    let responseBody = formatResponseBody(queryOutput.Items);
     console.log(responseBody);
     response = {
-      "body": JSON.stringify(responseBody),
-      "statusCode": 200,
-      "isBase64Encoded": false,
-      "headers": {
-        "Access-Control-Allow-Headers" : "Content-Type",
+      body: JSON.stringify(responseBody),
+      statusCode: 200,
+      isBase64Encoded: false,
+      headers: {
+        "Access-Control-Allow-Headers": "Content-Type",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
-      }
+        "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+      },
     };
     return response;
-  } catch(err) {
+  } catch (err) {
     handleQueryError(err);
     response = {
-      "body": "query error",
-      "statusCode": 400,
-      "isBase64Encoded": false,
-      "headers": {
-        "Access-Control-Allow-Headers" : "Content-Type",
+      body: "query error",
+      statusCode: 400,
+      isBase64Encoded: false,
+      headers: {
+        "Access-Control-Allow-Headers": "Content-Type",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "OPTIONS,POST,GET"
-      }
+        "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+      },
     };
     return response;
   }
 };
 
-function formatResponseBody (queryOutput) {
+function formatResponseBody(queryOutput) {
   let uniqueKeys = [];
   let lastPhoneNumbers = [];
   for (let item of queryOutput) {
@@ -70,7 +70,7 @@ function formatResponseBody (queryOutput) {
     }
   }
   for (let timedate of uniqueKeys) {
-    let phoneAndWords = {vanityWords: []};
+    let phoneAndWords = { vanityWords: [] };
     phoneAndWords["timedate"] = timedate;
     for (let item of queryOutput) {
       if (item.sk.S === timedate) {
@@ -86,11 +86,15 @@ function formatResponseBody (queryOutput) {
 
 function handleQueryError(err) {
   if (!err) {
-    console.error('Encountered error object was empty');
+    console.error("Encountered error object was empty");
     return;
   }
   if (!err.code) {
-    console.error(`An exception occurred, investigate and configure retry strategy. Error: ${JSON.stringify(err)}`);
+    console.error(
+      `An exception occurred, investigate and configure retry strategy. Error: ${JSON.stringify(
+        err
+      )}`
+    );
     return;
   }
   // here are no API specific errors to handle for Query, common DynamoDB API errors are handled below
@@ -99,36 +103,54 @@ function handleQueryError(err) {
 
 function handleCommonErrors(err) {
   switch (err.code) {
-    case 'InternalServerError':
-      console.error(`Internal Server Error, generally safe to retry with exponential back-off. Error: ${err.message}`);
+    case "InternalServerError":
+      console.error(
+        `Internal Server Error, generally safe to retry with exponential back-off. Error: ${err.message}`
+      );
       return;
-    case 'ProvisionedThroughputExceededException':
-      console.error(`Request rate is too high. If you're using a custom retry strategy make sure to retry with exponential back-off. `
-        + `Otherwise consider reducing frequency of requests or increasing provisioned capacity for your table or secondary index. Error: ${err.message}`);
+    case "ProvisionedThroughputExceededException":
+      console.error(
+        `Request rate is too high. If you're using a custom retry strategy make sure to retry with exponential back-off. ` +
+          `Otherwise consider reducing frequency of requests or increasing provisioned capacity for your table or secondary index. Error: ${err.message}`
+      );
       return;
-    case 'ResourceNotFoundException':
-      console.error(`One of the tables was not found, verify table exists before retrying. Error: ${err.message}`);
+    case "ResourceNotFoundException":
+      console.error(
+        `One of the tables was not found, verify table exists before retrying. Error: ${err.message}`
+      );
       return;
-    case 'ServiceUnavailable':
-      console.error(`Had trouble reaching DynamoDB. generally safe to retry with exponential back-off. Error: ${err.message}`);
+    case "ServiceUnavailable":
+      console.error(
+        `Had trouble reaching DynamoDB. generally safe to retry with exponential back-off. Error: ${err.message}`
+      );
       return;
-    case 'ThrottlingException':
-      console.error(`Request denied due to throttling, generally safe to retry with exponential back-off. Error: ${err.message}`);
+    case "ThrottlingException":
+      console.error(
+        `Request denied due to throttling, generally safe to retry with exponential back-off. Error: ${err.message}`
+      );
       return;
-    case 'UnrecognizedClientException':
-      console.error(`The request signature is incorrect most likely due to an invalid AWS access key ID or secret key, fix before retrying. `
-        + `Error: ${err.message}`);
+    case "UnrecognizedClientException":
+      console.error(
+        `The request signature is incorrect most likely due to an invalid AWS access key ID or secret key, fix before retrying. ` +
+          `Error: ${err.message}`
+      );
       return;
-    case 'ValidationException':
-      console.error(`The input fails to satisfy the constraints specified by DynamoDB, `
-        + `fix input before retrying. Error: ${err.message}`);
+    case "ValidationException":
+      console.error(
+        `The input fails to satisfy the constraints specified by DynamoDB, ` +
+          `fix input before retrying. Error: ${err.message}`
+      );
       return;
-    case 'RequestLimitExceeded':
-      console.error(`Throughput exceeds the current throughput limit for your account, `
-        + `increase account level throughput before retrying. Error: ${err.message}`);
+    case "RequestLimitExceeded":
+      console.error(
+        `Throughput exceeds the current throughput limit for your account, ` +
+          `increase account level throughput before retrying. Error: ${err.message}`
+      );
       return;
     default:
-      console.error(`An exception occurred, investigate and configure retry strategy. Error: ${err.message}`);
+      console.error(
+        `An exception occurred, investigate and configure retry strategy. Error: ${err.message}`
+      );
       return;
   }
 }
