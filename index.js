@@ -39,13 +39,11 @@ exports.handler = async (event) => {
     let vanityWords = getVanity(pnInLetters);
     let scoredSortedWords = scoreSortWords(vanityWords, areaCode);
     await insertToDB(scoredSortedWords, receivedPhoneNumber);
-    console.log(scoredSortedWords);
     response = formatConnectResponse(scoredSortedWords);    
   } catch (err) {
     console.log(err);
     response = formatConnectResponse(null, err);
   } finally {
-    console.log(response);
     return response;
   }
 };
@@ -66,7 +64,6 @@ function formatConnectResponse(sortedWords, err = "") {
     resultSize = 3;
   }
   for (let i = 0; i < resultSize; i++) {
-    console.log(Object.keys(sortedWords)[i]);
     if (i === 0) {
       result = "<prosody rate='x-slow'>" + 
         "<say-as interpret-as='characters'>" + 
@@ -78,14 +75,13 @@ function formatConnectResponse(sortedWords, err = "") {
          sortedWords[Object.keys(sortedWords)[i]] + 
         "</say-as>" + "</prosody>";
     }
-    // result = result + " " + sortedWords[Object.keys(sortedWords)[i]];
   }
   return { vanityWords: result.trim()} ;
 }
 
 async function insertToDB(words, phoneNumber) {
+    const currentTime = new Date().toISOString();
     for (let score of Object.keys(words)) {
-      const currentTime = new Date().toISOString();
       let params = {
           Item: {
            "pk": {
@@ -99,7 +95,11 @@ async function insertToDB(words, phoneNumber) {
             },
            "attr2": {
              S: score
+            },
+            "attr3": {
+             S: "vanitynumber"
             }
+            
           },
         TableName: dbTable
       };
