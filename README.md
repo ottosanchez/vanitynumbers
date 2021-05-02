@@ -15,7 +15,7 @@ Web App:
 The web app CI/CD pipeline was built using AWS Amplify. The front application (code can be found here https://github.com/ottosanchez/vanityfrontend) calls a method in AWS API Gateway that is integrated to a Lambda function (queryVanityTable) that in turns reads vanity number lookups for the last 5 phone numbers that called in the Phone Vanity Number Lookup service. 
   
 
-## Implementation Details- Functions ##
+## Implementation Details- Files inclued in repo ##
 There are two main Lambda functions in this repo used for the phone lookup service and Web App backend respectively.
     
 vanity.js: 
@@ -28,6 +28,15 @@ To sort the resulting vanity numbers, a scoring mechanism was used based on the 
 queryVanityTable.js: 
     
 The function is called by API gateway- Get resource, queries the DynamoDB table where vanity.js wrote previous vanity numbers and related information and returns the 5 most recent callers with their respective vanity words and a timestamp.  
+
+vanitynumbers.json:
+DynamoDB schema used to create the table where vanity numbers are stored.
+
+vanityNumber-Callflow.json:
+Callflow file used in Amazon Connect for the vanity number phone service.
+
+10k.txt:
+Dictionary of common English words, sorted from most to least common.
 
 ## Deployment ##
 //TO-DO
