@@ -35,3 +35,4 @@ Deployment package, mainly using AWS SAM or CDK.
 Integration with codepipeline to create a CI/CD pipeline, code build and code deploy to the process to deploy changes to the application only if unit test (codebuild) and integration tests (codedeploy) are pass.
 Unit testing with jest. I think this could be accomplish in a short timeframe since the code is modular allowing to create tests more easily.
 Modularize the application, specially the vanity.js file has several helper functions that I could have moved to a different file for better code organization.
+Integrate the customer DNS domain on route 53 to the amplify application for a more URL friendly experience.
