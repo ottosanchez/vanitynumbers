@@ -12,7 +12,7 @@ The phone service hosting voice conversations is Amazon Connect, integrated with
     
 Web App: 
     
-The web app CI/CD pipeline was built using AWS Amplify. The front application (code can be found here https://github.com/ottosanchez/vanityfrontend) calls a method in AWS API Gateway that is integrated to a Lambda function (queryVanityTable) that in turns reads vanity number lookups for the last 5 phone numbers that called in the Phone Vanity Number Lookup service. 
+The web app CI/CD pipeline was built using AWS Amplify. The front application (code can be found here https://github.com/ottosanchez/vanityfrontend/tree/master) calls a method in AWS API Gateway that is integrated to a Lambda function (queryVanityTable) that in turns reads vanity number lookups for the last 5 phone numbers that called in the Phone Vanity Number Lookup service. 
   
 
 ## Implementation Details- Files inclued in repo ##
