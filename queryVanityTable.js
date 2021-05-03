@@ -28,7 +28,7 @@ function createQueryInput(queryItemLimit) {
     Limit: queryItemLimit,
   };
 }
-exports.handler = async (event) => {
+exports.handler = async () => {
   let response;
   try {
     let queryOutput = await dynamoDbClient.query(queryInput).promise();

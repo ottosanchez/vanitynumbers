@@ -30,6 +30,8 @@ Web App
 https://user-images.githubusercontent.com/47998315/116829741-2f660e80-ab6b-11eb-8e09-e80ba6b251f3.png
 
 ## TO-DOs, pending tasks
-With more time I would have created a deployment package, mainly using AWS SAM or CDK. 
-I would have also integrated codepipeline, code build and code deploy to the process to deploy changes to the application only if unit test (codebuild) and integration tests (codedeploy) are successful.
-I would have created unit testing. I think this could be accomplish in a short timeframe since the code is modular allowing to create tests more easily.
+What would have I added with more time?
+Deployment package, mainly using AWS SAM or CDK. 
+Integration with codepipeline to create a CI/CD pipeline, code build and code deploy to the process to deploy changes to the application only if unit test (codebuild) and integration tests (codedeploy) are pass.
+Unit testing with jest. I think this could be accomplish in a short timeframe since the code is modular allowing to create tests more easily.
+Modularize the application, specially the vanity.js file has several helper functions that I could have moved to a different file for better code organization.

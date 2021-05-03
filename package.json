@@ -10,5 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "@datastructures-js/trie": "^4.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.25.0"
   }
 }
